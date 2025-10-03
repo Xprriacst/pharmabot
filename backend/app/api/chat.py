@@ -36,10 +36,11 @@ async def chat(request: ChatRequest):
     """
     Main chat endpoint - sends user message and returns AI response with sources
     """
+    # Validate empty message first (before trying anything else)
+    if not request.message or not request.message.strip():
+        raise HTTPException(status_code=400, detail="Message cannot be empty")
+    
     try:
-        if not request.message.strip():
-            raise HTTPException(status_code=400, detail="Message cannot be empty")
-        
         # Generate response using RAG
         result = await rag_service.generate_response(
             query=request.message,
@@ -54,15 +55,20 @@ async def chat(request: ChatRequest):
             timestamp=datetime.utcnow().isoformat(),
             tokens_used=result.get("tokens_used")
         )
-    
+    except ValueError as e:
+        # Surface configuration issues (like missing API key) with a clearer status code
+        raise HTTPException(status_code=503, detail=str(e)) from e
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error generating response: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error generating response: {str(e)}") from e
+
+class ClearSessionRequest(BaseModel):
+    session_id: str
 
 @router.post("/clear")
-async def clear_session(session_id: str):
+async def clear_session(request: ClearSessionRequest):
     """Clear conversation history for a session"""
     try:
-        rag_service.clear_session(session_id)
+        rag_service.clear_session(request.session_id)
         return {"status": "success", "message": "Session cleared"}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error clearing session: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error clearing session: {str(e)}") from e

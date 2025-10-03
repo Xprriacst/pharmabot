@@ -8,7 +8,7 @@ class Settings(BaseSettings):
     DEBUG: bool = True
     
     # API Keys
-    OPENAI_API_KEY: str
+    OPENAI_API_KEY: str = ""  # Optional at startup, validated when RAGService initializes
     
     # Database
     CHROMA_DB_PATH: str = "./data/chroma_db"

@@ -27,10 +27,11 @@ async def search_documents(
     """
     Search in the knowledge base (Vidal + Meddispar)
     """
+    # Validate empty query first
+    if not q or not q.strip():
+        raise HTTPException(status_code=400, detail="Query cannot be empty")
+    
     try:
-        if not q.strip():
-            raise HTTPException(status_code=400, detail="Query cannot be empty")
-        
         results = await rag_service.search_documents(
             query=q,
             source_type=source_type,
@@ -42,9 +43,10 @@ async def search_documents(
             results=results,
             total_results=len(results)
         )
-    
+    except ValueError as e:
+        raise HTTPException(status_code=503, detail=str(e)) from e
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Search error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Search error: {str(e)}") from e
 
 @router.get("/stats")
 async def get_database_stats():
@@ -52,5 +54,7 @@ async def get_database_stats():
     try:
         stats = await rag_service.get_stats()
         return stats
+    except ValueError as e:
+        raise HTTPException(status_code=503, detail=str(e)) from e
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error fetching stats: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error fetching stats: {str(e)}") from e

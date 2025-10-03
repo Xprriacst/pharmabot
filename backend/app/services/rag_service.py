@@ -22,12 +22,31 @@ import chromadb
 
 class RAGService:
     def __init__(self):
-        self.embeddings = OpenAIEmbeddings(
+        # Lazy initialization - clients created on first use
+        self._embeddings = None
+        self._llm = None
+        self._vectorstore = None
+        self._initialized = False
+        
+        # Session memory storage
+        self.sessions = {}
+        
+    def _ensure_initialized(self):
+        """Lazy initialization of OpenAI and Chroma clients"""
+        if self._initialized:
+            return
+        
+        if not settings.OPENAI_API_KEY:
+            raise ValueError(
+                "OPENAI_API_KEY is not configured. Please set it in your .env file or environment variables."
+            )
+        
+        self._embeddings = OpenAIEmbeddings(
             model=settings.EMBEDDING_MODEL,
             openai_api_key=settings.OPENAI_API_KEY
         )
         
-        self.llm = ChatOpenAI(
+        self._llm = ChatOpenAI(
             model=settings.LLM_MODEL,
             temperature=settings.LLM_TEMPERATURE,
             max_tokens=settings.MAX_TOKENS,
@@ -39,17 +58,33 @@ class RAGService:
             path=settings.CHROMA_DB_PATH
         )
         
-        self.vectorstore = Chroma(
+        self._vectorstore = Chroma(
             client=chroma_client,
             collection_name="pharmabot_knowledge",
-            embedding_function=self.embeddings,
+            embedding_function=self._embeddings,
         )
         
-        # Session memory storage
-        self.sessions = {}
-        
-        # Custom prompt for pharmaceutical context
-        self.qa_prompt = PromptTemplate(
+        self._initialized = True
+    
+    @property
+    def embeddings(self):
+        self._ensure_initialized()
+        return self._embeddings
+    
+    @property
+    def llm(self):
+        self._ensure_initialized()
+        return self._llm
+    
+    @property
+    def vectorstore(self):
+        self._ensure_initialized()
+        return self._vectorstore
+    
+    @property
+    def qa_prompt(self):
+        """Custom prompt for pharmaceutical context"""
+        return PromptTemplate(
             input_variables=["context", "question", "chat_history"],
             template="""Tu es un assistant IA spécialisé pour les pharmaciens. Tu dois répondre uniquement en te basant sur les informations officielles du Vidal et de Meddispar fournies ci-dessous.
 
