@@ -15,7 +15,7 @@ class Settings(BaseSettings):
     SCRAPING_CACHE_PATH: str = "./data/cache"
     
     # CORS
-    ALLOWED_ORIGINS: str = "http://localhost:5173,http://localhost:3000"
+    ALLOWED_ORIGINS: str = "https://pharmabot-vidal-assistant.netlify.app,http://localhost:5173,http://localhost:5174,http://localhost:3000"
     
     # Security
     SECRET_KEY: str = "your-secret-key-change-in-production"
