@@ -29,3 +29,20 @@ async def system_status():
         },
         "timestamp": datetime.utcnow().isoformat()
     }
+
+@router.post("/load-demo-data")
+async def load_demo_data(background_tasks: BackgroundTasks):
+    """Load demonstration data into the database"""
+    def load_data():
+        try:
+            logger.info("Starting demo data load...")
+            subprocess.run(["python", "scripts/load_demo_data.py"], check=True, cwd=".")
+            logger.info("Demo data loaded successfully")
+        except Exception as e:
+            logger.error(f"Error loading demo data: {e}")
+    
+    background_tasks.add_task(load_data)
+    return {
+        "status": "started",
+        "message": "Demo data loading started in background"
+    }
