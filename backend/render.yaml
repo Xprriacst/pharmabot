@@ -1,0 +1,30 @@
+services:
+  - type: web
+    name: pharmabot-backend
+    env: python
+    region: frankfurt
+    plan: free
+    branch: main
+    buildCommand: "pip install -r requirements.txt && python -m spacy download fr_core_news_sm"
+    startCommand: "uvicorn app.main:app --host 0.0.0.0 --port $PORT"
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.9.18
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: CHROMA_DB_PATH
+        value: /opt/render/project/src/data/chroma_db
+      - key: SCRAPING_CACHE_PATH
+        value: /opt/render/project/src/data/cache
+      - key: APP_NAME
+        value: PharmaBot
+      - key: APP_VERSION
+        value: 1.0.0
+      - key: DEBUG
+        value: False
+      - key: ALLOWED_ORIGINS
+        value: https://pharmabot-vidal-assistant.netlify.app
+    disk:
+      name: pharmabot-data
+      mountPath: /opt/render/project/src/data
+      sizeGB: 1
