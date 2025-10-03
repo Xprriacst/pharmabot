@@ -1,8 +1,11 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, BackgroundTasks
 from datetime import datetime
 from app.config import settings
+import subprocess
+import logging
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
 
 @router.get("/health")
 async def health_check():
